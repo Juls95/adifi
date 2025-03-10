@@ -62,7 +62,7 @@ const App: React.FC = () => {
                     <img src="/warde-logo.png" alt="Warden" className="logo main-logo" />
                 </div>
                 <h1>Adifi</h1>
-                <p>Get AI-powered trading analysis and recommendations for Uniswap pools</p>
+                <p>Get AI-powered trading analysis and recommendations for Uniswap pools!</p>
             </header>
 
             <div className="chat-interface">
