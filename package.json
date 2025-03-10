@@ -13,7 +13,7 @@
     "format-check": "prettier -c .prettierrc --check \"**/*.{ts,js,cjs,json,md}\"",
     "dev:web": "vite",
     "dev:server": "NODE_ENV=development ts-node api/index.ts",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "vercel-build": "npm run build",
     "preview": "vite preview",
     "vercel-dev": "vercel dev"
