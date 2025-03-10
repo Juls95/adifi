@@ -34,9 +34,9 @@ const App: React.FC = () => {
             }
 
             setMessages(prev => [...prev, `Assistant: ${data.response}`]);
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Fetch error:', error);
-            setMessages(prev => [...prev, `Error: ${error.message}`]);
+            setMessages(prev => [...prev, `Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`]);
         } finally {
             setLoading(false);
             setInput('');
