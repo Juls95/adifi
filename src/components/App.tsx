@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import '../styles/App.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NODE_ENV === 'production' 
+    ? 'https://adifi-4il7y1q3v-juls95s-projects.vercel.app/api'
+    : 'http://localhost:3001';
 
 const App: React.FC = () => {
     const [input, setInput] = useState('');

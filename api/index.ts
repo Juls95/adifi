@@ -14,17 +14,25 @@ dotenv.config();
 
 const app = express();
 
-// CORS setup as per Vercel docs
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "https://agentaiblockchainadifi-juls95-juls95s-projects.vercel.app"
-    ],
-  })
-);
+// Verify environment variables
+const requiredEnvVars = ['ANTHROPIC_API_KEY', 'GRAPH_API_KEY'];
+for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+        console.error(`Missing required environment variable: ${envVar}`);
+    }
+}
+
+// CORS configuration
+const allowedOrigins = [
+    'https://adifi-4il7y1q3v-juls95s-projects.vercel.app', // Your Vercel deployment URL
+    'http://localhost:3000',
+    'http://localhost:5173',
+];
+
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+}));
 
 app.use(express.json());
 
@@ -37,6 +45,10 @@ async function initializeAgent() {
     isInitializing = true;
     
     try {
+        if (!process.env.ANTHROPIC_API_KEY) {
+            throw new Error('ANTHROPIC_API_KEY is not set');
+        }
+
         const llm = new ChatAnthropic({
             modelName: "claude-3-sonnet-20240229",
             anthropicApiKey: process.env.ANTHROPIC_API_KEY,
@@ -96,7 +108,12 @@ async function initializeAgent() {
 
 // Health check endpoint
 app.get('/', (req, res) => {
-    res.json({ status: 'API is running' });
+    res.json({ 
+        status: 'API is running',
+        environment: process.env.NODE_ENV,
+        hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
+        hasGraphKey: !!process.env.GRAPH_API_KEY
+    });
 });
 
 // Chat endpoint
@@ -108,13 +125,15 @@ app.post('/chat', async (req, res) => {
         }
 
         if (!agent) {
+            console.log('Initializing agent...');
             await initializeAgent();
         }
 
         if (!agent) {
-            return res.status(503).json({ error: 'Agent not initialized' });
+            return res.status(503).json({ error: 'Failed to initialize agent' });
         }
 
+        console.log('Processing message:', message);
         const stream = await agent.stream(
             { messages: [new HumanMessage(message)] },
             { configurable: { thread_id: "Warden Agent Kit API!" } }
@@ -132,11 +151,10 @@ app.post('/chat', async (req, res) => {
         res.json({ response });
     } catch (error: unknown) {
         console.error('Chat error:', error);
-        if (error instanceof Error) {
-            res.status(500).json({ error: error.message });
-        } else {
-            res.status(500).json({ error: 'An unknown error occurred' });
-        }
+        res.status(500).json({ 
+            error: error instanceof Error ? error.message : 'An unknown error occurred',
+            details: error
+        });
     }
 });
 
